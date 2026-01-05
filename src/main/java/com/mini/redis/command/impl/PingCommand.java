@@ -2,7 +2,7 @@ package com.mini.redis.command.impl;
 
 import com.mini.redis.command.Command;
 import com.mini.redis.protocol.RespMessage;
-import io.netty.channel.ChannelHandlerContext;
+import com.mini.redis.server.RedisClient;
 
 import java.util.List;
 
@@ -31,7 +31,10 @@ public class PingCommand implements Command {
     private static final String NAME = "PING";
 
     @Override
-    public RespMessage execute(List<String> args, ChannelHandlerContext ctx) {
+    public RespMessage execute(List<String> args, RedisClient client) {
+        // 更新客户端活动时间
+        client.updateActiveTime();
+
         // 无参数时返回 PONG
         if (args.isEmpty()) {
             return RespMessage.pong();

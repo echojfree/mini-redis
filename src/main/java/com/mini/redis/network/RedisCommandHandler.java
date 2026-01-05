@@ -4,6 +4,7 @@ import com.mini.redis.command.Command;
 import com.mini.redis.command.CommandFactory;
 import com.mini.redis.config.RedisConfig;
 import com.mini.redis.protocol.RespMessage;
+import com.mini.redis.server.RedisClient;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -42,14 +43,9 @@ public class RedisCommandHandler extends SimpleChannelInboundHandler<RespMessage
     private final CommandFactory commandFactory;
 
     /**
-     * 连接计数器
+     * 当前客户端实例
      */
-    private static final AtomicInteger connectionCount = new AtomicInteger(0);
-
-    /**
-     * 当前连接的客户端信息
-     */
-    private String clientInfo;
+    private RedisClient client;
 
     /**
      * 构造函数
@@ -66,8 +62,11 @@ public class RedisCommandHandler extends SimpleChannelInboundHandler<RespMessage
      */
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        clientInfo = ctx.channel().remoteAddress().toString();
-        int count = connectionCount.incrementAndGet();
+        // 创建客户端实例
+        client = new RedisClient(ctx.channel());
+
+        String clientInfo = ctx.channel().remoteAddress().toString();
+        int count = RedisClient.getClientCount();
 
         logger.info("客户端连接: {} (当前连接数: {})", clientInfo, count);
 
@@ -88,8 +87,12 @@ public class RedisCommandHandler extends SimpleChannelInboundHandler<RespMessage
      */
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        int count = connectionCount.decrementAndGet();
-        logger.info("客户端断开: {} (当前连接数: {})", clientInfo, count);
+        if (client != null) {
+            client.disconnect();
+            int count = RedisClient.getClientCount();
+            logger.info("客户端断开: {} (当前连接数: {})", client.getAddress(), count);
+            client = null;
+        }
         super.channelInactive(ctx);
     }
 
@@ -203,6 +206,11 @@ public class RedisCommandHandler extends SimpleChannelInboundHandler<RespMessage
     private RespMessage executeCommand(String commandName, List<String> args,
                                        ChannelHandlerContext ctx) {
         try {
+            // 更新客户端活动时间
+            if (client != null) {
+                client.updateActiveTime();
+            }
+
             // 查找命令处理器
             Command command = commandFactory.getCommand(commandName);
             if (command == null) {
@@ -216,7 +224,7 @@ public class RedisCommandHandler extends SimpleChannelInboundHandler<RespMessage
             }
 
             // 执行命令
-            return command.execute(args, ctx);
+            return command.execute(args, client);
 
         } catch (IllegalArgumentException e) {
             // 参数错误
@@ -233,6 +241,7 @@ public class RedisCommandHandler extends SimpleChannelInboundHandler<RespMessage
      */
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        String clientInfo = client != null ? client.getAddress() : "unknown";
         logger.error("命令处理器异常: {}", clientInfo, cause);
 
         // 发送错误响应
@@ -244,14 +253,5 @@ public class RedisCommandHandler extends SimpleChannelInboundHandler<RespMessage
 
         // 关闭连接
         ctx.close();
-    }
-
-    /**
-     * 获取当前连接数
-     *
-     * @return 当前活跃的连接数
-     */
-    public static int getConnectionCount() {
-        return connectionCount.get();
     }
 }

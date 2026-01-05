@@ -1,6 +1,6 @@
 package com.mini.redis.command;
 
-import com.mini.redis.command.impl.PingCommand;
+import com.mini.redis.command.impl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,20 +60,64 @@ public class CommandFactory {
      * 注册默认命令
      */
     private void registerDefaultCommands() {
-        // 注册基础命令
+        // 基础命令
         register(new PingCommand());
 
-        // TODO: 注册其他命令
-        // register(new GetCommand());
-        // register(new SetCommand());
-        // register(new DelCommand());
-        // register(new ExistsCommand());
-        // register(new KeysCommand());
-        // register(new TypeCommand());
-        // register(new ExpireCommand());
-        // register(new TtlCommand());
-        // register(new FlushDbCommand());
-        // register(new FlushAllCommand());
+        // String 命令
+        register(new GetCommand());
+        register(new SetCommand());
+        register(new IncrCommand());
+        // TODO: register(new DecrCommand());
+        // TODO: register(new IncrByCommand());
+        // TODO: register(new AppendCommand());
+        // TODO: register(new StrlenCommand());
+
+        // Key 命令
+        register(new DelCommand());
+        register(new ExistsCommand());
+        register(new KeysCommand());
+        register(new TypeCommand());
+        register(new ExpireCommand());
+        register(new TtlCommand());
+        // TODO: register(new PersistCommand());
+        // TODO: register(new RenameCommand());
+
+        // 数据库命令
+        register(new SelectCommand());
+        // TODO: register(new FlushDbCommand());
+        // TODO: register(new FlushAllCommand());
+        // TODO: register(new DbSizeCommand());
+
+        // TODO: List 命令
+        // register(new LPushCommand());
+        // register(new RPushCommand());
+        // register(new LPopCommand());
+        // register(new RPopCommand());
+        // register(new LRangeCommand());
+        // register(new LLenCommand());
+
+        // TODO: Hash 命令
+        // register(new HSetCommand());
+        // register(new HGetCommand());
+        // register(new HDelCommand());
+        // register(new HGetAllCommand());
+        // register(new HKeysCommand());
+        // register(new HValsCommand());
+        // register(new HLenCommand());
+
+        // TODO: Set 命令
+        // register(new SAddCommand());
+        // register(new SRemCommand());
+        // register(new SMembersCommand());
+        // register(new SIsMemberCommand());
+        // register(new SCardCommand());
+
+        // TODO: Sorted Set 命令
+        // register(new ZAddCommand());
+        // register(new ZRangeCommand());
+        // register(new ZRemCommand());
+        // register(new ZScoreCommand());
+        // register(new ZCardCommand());
 
         logger.info("注册了 {} 个命令", commands.size());
     }

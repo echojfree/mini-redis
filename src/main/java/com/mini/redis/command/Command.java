@@ -1,7 +1,7 @@
 package com.mini.redis.command;
 
 import com.mini.redis.protocol.RespMessage;
-import io.netty.channel.ChannelHandlerContext;
+import com.mini.redis.server.RedisClient;
 
 import java.util.List;
 
@@ -20,10 +20,10 @@ public interface Command {
      * 执行命令
      *
      * @param args 命令参数列表
-     * @param ctx 通道上下文（用于访问连接状态等）
+     * @param client 客户端连接
      * @return 命令执行结果
      */
-    RespMessage execute(List<String> args, ChannelHandlerContext ctx);
+    RespMessage execute(List<String> args, RedisClient client);
 
     /**
      * 获取命令名称
